@@ -1,58 +1,159 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+  <div>
+    <div class="header">深圳市应急救援数据可视化平台</div>
+    <div class="content">
+      <div class="leftcontent">
+        <div id="population"><population /></div>
+        <div id="economy"><economy /></div>
+      </div>
+      <div class="middlecontent">
+        <div id="map">map</div>
+        <div id="air"><air /></div>
+      </div>
+      <div class="rightcontent">
+        <div id="hospital">
+          <span class="graph_title">风速(m/s)</span>
+      <div id="windspeed" class="graph_content"></div>
+        </div>
+        <div id="shelter"><shelter/></div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+import * as echarts from "echarts";
+
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
+  name: "HelloWorld",
+  data() {
+    return {
+      windspeed: [],
+      rainfall: [],
+    };
+  },
+  components: {
+
+  },
+  mounted() {
+    this.initMap();
+  },
+  methods: {
+    //echarts风雨可视化
+    echartsGraph(id, data) {
+      var chartDom = document.getElementById(id);
+      var myChart = echarts.init(chartDom);
+      var option, xlength;
+      if (data.length) {
+        xlength = data.length;
+      } else {
+        xlength = 0;
+      }
+      option = {
+        xAxis: {
+          type: "category",
+          data: Array(xlength)
+            .fill(1)
+            .map((v, i) => ++i),
+        },
+        yAxis: {
+          type: "value",
+          scale: true,
+        },
+        axisLabel:{
+          color:'#ffffff'
+        },
+        series: [
+          {
+            data: data,
+            type: "line",
+            smooth: true,
+          },
+        ],
+        grid: {
+          top: "20px",
+          left: "40px",
+          right: "10px",
+          bottom: "60px",
+          width:"auto",
+          height:'auto'
+        },
+      };
+      myChart.setOption(option);
+      myChart.resize();
+    },
+
+    initMap() {
+      let url = "/scene.json";
+      axios.get(url).then((res) => {
+        let data = res.data;
+        this.windspeed=data['windspeed'];
+        this.rainfall=data['rainfall'];
+        this.echartsGraph("windspeed", this.windspeed);
+      })
+    },
   }
-}
+};
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
+<style>
+.header {
+  height: 8vh;
+  line-height: 7vh;
+  background: url("../assets/title.png") no-repeat;
+  background-size: cover;
+  text-align: center;
+  color: white;
+  font-size: 30px;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+.content {
+  height: 92vh;
+  margin-top: 10px;
+  /* background-color: brown; */
+  display: flex;
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
+.leftcontent {
+  width: 27%;
+  /* background-color: cadetblue; */
 }
-a {
-  color: #42b983;
+.middlecontent {
+  flex: 1;
+  /* background-color: coral; */
+}
+.rightcontent {
+  width: 27%;
+  /* background-color: darkgray; */
+}
+#population {
+  height: 56vh;
+  margin: 10px;
+  background: url("../assets/line1.png") no-repeat;
+  background-size: 100% 100%;
+}
+#economy {
+  height: 30vh;
+  margin: 10px;
+  background: url("../assets/line1.png") no-repeat;
+  background-size: 100% 100%;
+}
+#hospital,
+#shelter {
+  height: 43vh;
+  margin: 10px;
+  background: url("../assets/line1.png") no-repeat;
+  background-size: 100% 100%;
+}
+#map {
+  height: 56vh;
+  margin: 10px;
+  background: url("../assets/line.png") no-repeat;
+  background-size: 100% 100%;
+}
+#air {
+  height: 30vh;
+  margin: 10px;
+  background: url("../assets/line1.png") no-repeat;
+  background-size: 100% 100%;
 }
 </style>
